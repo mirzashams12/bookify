@@ -3,6 +3,11 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { Plus, Clock, Filter, Calendar, Tag } from "lucide-react";
 import FilterDropdown from "@/components/filter/FilterDropdown";
+import PaginationControls from "@/components/filter/PaginationControl";
+import { TimeBadge } from "@/components/badge/TimeBadge";
+import { StatusBadge } from "@/components/badge/StatusBadge";
+import { Status } from "@/types/status";
+import { Service } from "@/types/service";
 
 // --- Helpers ---
 
@@ -24,26 +29,22 @@ const getServiceColor = (name: string = "default") => {
     return colors[index];
 };
 
-const formatTimeDetails = (time24: string) => {
-    if (!time24) return { formatted: "N/A", period: "" };
-    const [hours, minutes] = time24.split(':').map(Number);
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const hours12 = hours % 12 || 12;
-    const formatted = `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
-    return { formatted, period };
-};
+async function getHostName() {
+    const headersList = await headers();
+    return headersList.get("host");
+}
 
 // Updated fetcher to handle filter parameters
-async function getAppointments(searchParams: { page?: string, date?: string, status?: string, service?: string }) {
+async function getAppointments(searchParams: { page?: string, startDate?: string, endDate?: string, status?: string, service?: string }) {
     try {
-        const headersList = await headers();
-        const host = headersList.get("host");
+        const host = await getHostName();
 
         // Construct query string
         const query = new URLSearchParams({
             page: searchParams.page || "1",
-            limit: "10",
-            ...(searchParams.date && { date: searchParams.date }),
+            limit: "5",
+            ...(searchParams.startDate && { startDate: searchParams.startDate }),
+            ...(searchParams.endDate && { endDate: searchParams.endDate }),
             ...(searchParams.status && { status: searchParams.status }),
             ...(searchParams.service && { service: searchParams.service }),
         }).toString();
@@ -56,33 +57,26 @@ async function getAppointments(searchParams: { page?: string, date?: string, sta
     }
 }
 
-// --- Components ---
+async function getStatus() {
+    const host = await getHostName();
 
-function TimeBadge({ time }: { time: string }) {
-    const { formatted, period } = formatTimeDetails(time);
-    const colorStyles = period === 'AM' ? "bg-indigo-50 text-indigo-700 border-indigo-100" : "bg-orange-50 text-orange-700 border-orange-100";
-    return (
-        <div className={`inline-flex items-center px-2.5 py-1 rounded-lg border text-xs font-bold gap-1.5 ${colorStyles}`}>
-            <Clock size={12} className="opacity-60" />
-            <span>{formatted}</span>
-        </div>
-    );
+    const res = await fetch(`http://${host}/api/statuses`, {
+        cache: "no-store",
+    });
+
+    if (!res.ok) return [];
+    return res.json();
 }
 
-function StatusBadge({ status }: { status: Appointment["status"] }) {
-    const statusKey = status?.name?.toLowerCase() || "unknown";
-    const styles: Record<string, string> = {
-        pending: "bg-amber-100 text-amber-700 border-amber-200",
-        confirmed: "bg-emerald-100 text-emerald-700 border-emerald-200",
-        cancelled: "bg-rose-100 text-rose-700 border-rose-200",
-        completed: "bg-indigo-100 text-indigo-700 border-indigo-200",
-    };
+async function getServices() {
+    const host = await getHostName();
 
-    return (
-        <span className={`px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-wider ${styles[statusKey] || "bg-slate-100 text-slate-500"}`}>
-            {status?.name || "Unknown"}
-        </span>
-    );
+    const res = await fetch(`http://${host}/api/services`, {
+        cache: "no-store",
+    });
+
+    if (!res.ok) return [];
+    return res.json();
 }
 
 export default async function AdminAppointmentsPage({
@@ -92,6 +86,10 @@ export default async function AdminAppointmentsPage({
 }) {
     const params = await searchParams;
     const { data: appointments, totalPages } = await getAppointments(params);
+
+    const status: Status[] = await getStatus();
+    const services: Service[] = await getServices();
+
     const currentPage = Number(params.page || 1);
 
     return (
@@ -104,7 +102,7 @@ export default async function AdminAppointmentsPage({
 
                 <div className="flex items-center gap-3">
                     {/* NEW FLOATING FILTER */}
-                    <FilterDropdown />
+                    <FilterDropdown statuses={status} services={services} />
 
                     <Link href="/book" className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-indigo-100">
                         <Plus size={18} strokeWidth={3} />
@@ -114,7 +112,7 @@ export default async function AdminAppointmentsPage({
             </div>
 
             {/* Table */}
-            {appointments.length === 0 ? (
+            {!appointments || appointments.length === 0 ? (
                 <div className="bg-white rounded-[32px] border border-slate-200 p-20 text-center">
                     <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No records found</p>
                 </div>
@@ -133,7 +131,7 @@ export default async function AdminAppointmentsPage({
                         </thead>
 
                         <tbody className="divide-y divide-slate-50">
-                            {appointments.map((appt: Appointment) => { // Fixed 'any' type error here
+                            {appointments?.map((appt: Appointment) => { // Fixed 'any' type error here
                                 const serviceName = appt.service?.name || 'N/A';
                                 return (
                                     <tr key={appt.id} className="group hover:bg-slate-50/50 transition-all">
@@ -166,24 +164,7 @@ export default async function AdminAppointmentsPage({
                     </table>
 
                     {/* Pagination Bar */}
-                    <div className="flex justify-between items-center p-6 border-t border-slate-100 bg-slate-50/30">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                            Showing Page {currentPage} of {totalPages}
-                        </p>
-
-                        <div className="flex gap-3">
-                            {currentPage > 1 && (
-                                <Link href={`?page=${currentPage - 1}`} className="px-5 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl bg-white border border-slate-200 hover:border-indigo-300 transition-all">
-                                    Previous
-                                </Link>
-                            )}
-                            {currentPage < totalPages && (
-                                <Link href={`?page=${currentPage + 1}`} className="px-5 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl bg-slate-900 text-white hover:bg-indigo-600 transition-all shadow-md shadow-slate-200">
-                                    Next
-                                </Link>
-                            )}
-                        </div>
-                    </div>
+                    <PaginationControls currentPage={currentPage} totalPages={totalPages} />
                 </div>
             )}
         </div>

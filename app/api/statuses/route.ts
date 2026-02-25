@@ -7,7 +7,7 @@ export async function GET() {
     const { data, error } = await supabase
         .from("status")
         .select("id, name")
-        .order("created_at", { ascending: false });
+        .order("id", { ascending: true });
 
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });

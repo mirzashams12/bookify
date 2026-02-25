@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, User, FileText, Calendar as CalendarIcon, Clock, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { Service } from "@/types/service";
+import TimePicker from '../time/TimePicker';
 
 export default function BookAppointmentForm({ services, date }: { services: Service[], date?: string }) {
     const router = useRouter();
@@ -80,7 +81,12 @@ export default function BookAppointmentForm({ services, date }: { services: Serv
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input required name="date" type="date" defaultValue={date} readOnly={Boolean(date)}
                                 className="w-full px-4 py-3 rounded-xl border border-slate-200" />
-                            <input required name="time" type="time" className="w-full px-4 py-3 rounded-xl border border-slate-200" />
+                            <TimePicker
+                                name="time"
+                                minTime="08:00"
+                                maxTime="21:30"
+                                interval={5}
+                            />
                         </div>
                     </div>
 
