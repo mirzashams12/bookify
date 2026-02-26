@@ -19,6 +19,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         { icon: LayoutDashboard, label: 'Overview', url: "/dashboard", active: true },
         { icon: Calendar, label: 'Appointments', url: "/dashboard/appointments", active: false },
         { icon: Users, label: 'Clients', url: "/dashboard/clients", active: false },
+        { icon: Users, label: 'Providers', url: "/dashboard/providers", active: false },
         { icon: Settings, label: 'Settings', url: "/dashboard/settings", active: false },
     ];
 
@@ -70,7 +71,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
                 {/* Bottom Actions */}
                 <div className="p-4 border-t border-slate-100 space-y-2">
-                    <button className="w-full flex items-center gap-4 p-4 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-[20px] transition-all group">
+                    <button suppressHydrationWarning className="w-full flex items-center gap-4 p-4 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-[20px] transition-all group">
                         <LogOut size={22} />
                         {isSidebarOpen && <span className="font-bold text-sm">Logout</span>}
                     </button>
