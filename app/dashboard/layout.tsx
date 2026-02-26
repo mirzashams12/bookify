@@ -18,7 +18,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     const navItems = [
         { icon: LayoutDashboard, label: 'Overview', url: "/dashboard", active: true },
         { icon: Calendar, label: 'Appointments', url: "/dashboard/appointments", active: false },
-        { icon: Users, label: 'Clients', url: "/dashboard/calendar", active: false },
+        { icon: Users, label: 'Clients', url: "/dashboard/clients", active: false },
         { icon: Settings, label: 'Settings', url: "/dashboard/settings", active: false },
     ];
 
