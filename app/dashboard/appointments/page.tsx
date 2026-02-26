@@ -1,6 +1,5 @@
 import { Appointment } from "@/types/appointment";
 import { headers } from "next/headers";
-import Link from "next/link";
 import { Plus, Clock, Filter, Calendar, Tag } from "lucide-react";
 import FilterDropdown from "@/components/filter/FilterDropdown";
 import PaginationControls from "@/components/filter/PaginationControl";
@@ -8,9 +7,9 @@ import { TimeBadge } from "@/components/badge/TimeBadge";
 import { StatusBadge } from "@/components/badge/StatusBadge";
 import { Status } from "@/types/status";
 import { Service } from "@/types/service";
+import BookingDrawerContainer from "@/components/booking/BookingDrawerContainer";
 
 // --- Helpers ---
-
 const getServiceColor = (name: string = "default") => {
     const colors = [
         "bg-blue-50 text-blue-700 border-blue-100",
@@ -34,12 +33,9 @@ async function getHostName() {
     return headersList.get("host");
 }
 
-// Updated fetcher to handle filter parameters
 async function getAppointments(searchParams: { page?: string, startDate?: string, endDate?: string, status?: string, service?: string }) {
     try {
         const host = await getHostName();
-
-        // Construct query string
         const query = new URLSearchParams({
             page: searchParams.page || "1",
             limit: "5",
@@ -59,24 +55,14 @@ async function getAppointments(searchParams: { page?: string, startDate?: string
 
 async function getStatus() {
     const host = await getHostName();
-
-    const res = await fetch(`http://${host}/api/statuses`, {
-        cache: "no-store",
-    });
-
-    if (!res.ok) return [];
-    return res.json();
+    const res = await fetch(`http://${host}/api/statuses`, { cache: "no-store" });
+    return res.ok ? res.json() : [];
 }
 
 async function getServices() {
     const host = await getHostName();
-
-    const res = await fetch(`http://${host}/api/services`, {
-        cache: "no-store",
-    });
-
-    if (!res.ok) return [];
-    return res.json();
+    const res = await fetch(`http://${host}/api/services`, { cache: "no-store" });
+    return res.ok ? res.json() : [];
 }
 
 export default async function AdminAppointmentsPage({
@@ -86,10 +72,8 @@ export default async function AdminAppointmentsPage({
 }) {
     const params = await searchParams;
     const { data: appointments, totalPages } = await getAppointments(params);
-
     const status: Status[] = await getStatus();
     const services: Service[] = await getServices();
-
     const currentPage = Number(params.page || 1);
 
     return (
@@ -101,17 +85,12 @@ export default async function AdminAppointmentsPage({
                 </div>
 
                 <div className="flex items-center gap-3">
-                    {/* NEW FLOATING FILTER */}
                     <FilterDropdown statuses={status} services={services} />
-
-                    <Link href="/book" className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-indigo-100">
-                        <Plus size={18} strokeWidth={3} />
-                        Book
-                    </Link>
+                    {/* NEW: Drawer Trigger */}
+                    <BookingDrawerContainer services={services} />
                 </div>
             </div>
 
-            {/* Table */}
             {!appointments || appointments.length === 0 ? (
                 <div className="bg-white rounded-[32px] border border-slate-200 p-20 text-center">
                     <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No records found</p>
@@ -129,9 +108,8 @@ export default async function AdminAppointmentsPage({
                                 <th className="px-8 py-5 text-right">Actions</th>
                             </tr>
                         </thead>
-
                         <tbody className="divide-y divide-slate-50">
-                            {appointments?.map((appt: Appointment) => { // Fixed 'any' type error here
+                            {appointments?.map((appt: Appointment) => {
                                 const serviceName = appt.service?.name || 'N/A';
                                 return (
                                     <tr key={appt.id} className="group hover:bg-slate-50/50 transition-all">
@@ -142,12 +120,8 @@ export default async function AdminAppointmentsPage({
                                             </span>
                                         </td>
                                         <td className="px-8 py-5 font-bold text-slate-600 text-sm">{appt.date}</td>
-                                        <td className="px-8 py-5">
-                                            <TimeBadge time={appt.time} />
-                                        </td>
-                                        <td className="px-8 py-5">
-                                            <StatusBadge status={appt.status} />
-                                        </td>
+                                        <td className="px-8 py-5"><TimeBadge time={appt.time} /></td>
+                                        <td className="px-8 py-5"><StatusBadge status={appt.status} /></td>
                                         <td className="px-8 py-5 text-right">
                                             <div className="flex justify-end gap-2">
                                                 {appt.status?.name?.toLowerCase() === "pending" && (
@@ -162,8 +136,6 @@ export default async function AdminAppointmentsPage({
                             })}
                         </tbody>
                     </table>
-
-                    {/* Pagination Bar */}
                     <PaginationControls currentPage={currentPage} totalPages={totalPages} />
                 </div>
             )}

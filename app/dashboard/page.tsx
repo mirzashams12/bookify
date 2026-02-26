@@ -1,8 +1,10 @@
 import HeatmapCalendar from "@/components/calendar/HeatmapCalendar";
+import TodayOverview from "@/components/calendar/TodayOverview";
+import UpcomingDaysChart from "@/components/calendar/UpcomingDaysChart";
+import { Search } from "lucide-react";
 import { headers } from "next/headers";
-import { BookingsGroupedByDate } from "@/types/bookings";
 
-async function getStats(): Promise<BookingsGroupedByDate> {
+async function getStats() {
     const headersList = headers();
     const host = (await headersList).get("host");
 
@@ -17,22 +19,32 @@ export default async function DashboardPage() {
     const bookingsData = await getStats();
 
     return (
-        <div className="grid grid-cols-4 gap-6">
-            {/* Heatmap */}
-            <div className="col-span-3">
-                <HeatmapCalendar bookingsData={bookingsData} />
-            </div>
+        <div className="bg-white rounded-[40px] p-8 lg:p-12 border border-slate-200 shadow-[0_20px_60px_rgba(0,0,0,0.05)] animate-in fade-in duration-700">
+            <div className="flex flex-col lg:flex-row gap-16">
 
-            {/* Stats */}
-            <div className="space-y-6">
-                <div className="p-6 rounded-xl border border-zinc-800">
-                    <h4 className="text-sm text-zinc-400">Total Revenue</h4>
-                    <p className="text-2xl font-bold">$2,450</p>
+                {/* Left Section: Calendar */}
+                <div className="flex-1 min-w-0">
+                    <HeatmapCalendar bookingsData={bookingsData} />
                 </div>
 
-                <div className="p-6 rounded-xl border border-zinc-800">
-                    <h4 className="text-sm text-zinc-400">New Clients</h4>
-                    <p className="text-2xl font-bold">12</p>
+                {/* Right Section: Analytics Panel */}
+                <div className="w-full lg:w-80 space-y-16">
+                    <section>
+                        <h4 className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.25em] mb-10">
+                            Today's Overview
+                        </h4>
+                        <TodayOverview
+                            bookings={{ current: 9, target: 12 }}
+                            revenue={{ current: 1500, target: 2500 }}
+                        />
+                    </section>
+
+                    <section>
+                        <h4 className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.25em] mb-10">
+                            Upcoming Days
+                        </h4>
+                        <UpcomingDaysChart />
+                    </section>
                 </div>
             </div>
         </div>

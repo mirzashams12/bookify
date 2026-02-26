@@ -43,3 +43,17 @@ body {
 .animate-dropdownDown { animation: dropdownDown 0.18s ease-out; }
 .animate-dropdownUp { animation: dropdownUp 0.18s ease-out; }
 .animate-slideUp { animation: slideUp 0.25s ease-out; }
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #E2E8F0;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #CBD5E1;
+}
