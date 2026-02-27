@@ -58,19 +58,18 @@ export async function POST(req: Request) {
 
         const { data, error } = await supabase
             .from("appointments")
-            .insert([
-                {
-                    client_id: body.clientId,             // Matches new UUID column
-                    service_definition_id: body.serviceId, // Matches new UUID column
-                    name: body.name,
-                    email: body.email,
-                    date: body.date,
-                    time: body.time,
-                    final_duration: body.duration,        // Map frontend 'duration' to DB 'final_duration'
-                    final_price: body.price,             // Map frontend 'price' to DB 'final_price'
-                    status: body.status || 1
-                },
-            ])
+            .insert([{
+                client_id: body.clientId,
+                provider_id: body.providerId, // Added this
+                service_definition_id: body.serviceId,
+                name: body.name,
+                email: body.email,
+                date: body.date,
+                time: body.time,
+                final_duration: body.duration,
+                final_price: body.price,
+                status: body.status || 1
+            }])
             .select()
             .single();
 
