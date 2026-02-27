@@ -54,9 +54,10 @@ export async function POST(req: Request) {
                 fullname: body.fullname,
                 email: body.email,
                 phone: body.phone,
-                insurance_provider: body.insuranceProvider,
-                policy_number: body.policyNumber,
-                member_id: body.memberId
+                insurance_provider: body.insurance_provider,
+                policy_number: body.policy_number,
+                member_id: body.member_id,
+                is_active: body.is_active
             },
         ])
         .select()
