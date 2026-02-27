@@ -21,7 +21,10 @@ export async function GET(req: Request) {
         .from("appointments")
         .select(`
         *,
-        service:appointments_service_fkey (id, name),
+        service_definitions (
+            name,
+            specialties (name)
+        ),
         status:appointments_status_fkey (id, name)
     `, { count: "exact" });
 
@@ -48,28 +51,33 @@ export async function GET(req: Request) {
     });
 }
 
-// POST /api/appointments
+// app/api/appointments/route.ts
 export async function POST(req: Request) {
-    const body = await req.json();
+    try {
+        const body = await req.json();
 
-    const { data, error } = await supabase
-        .from("appointments")
-        .insert([
-            {
-                name: body.name,
-                service: body.service,
-                date: body.date,
-                time: body.time,
-                status: body.status,
-                email: body.email
-            },
-        ])
-        .select()
-        .single();
+        const { data, error } = await supabase
+            .from("appointments")
+            .insert([
+                {
+                    client_id: body.clientId,             // Matches new UUID column
+                    service_definition_id: body.serviceId, // Matches new UUID column
+                    name: body.name,
+                    email: body.email,
+                    date: body.date,
+                    time: body.time,
+                    final_duration: body.duration,        // Map frontend 'duration' to DB 'final_duration'
+                    final_price: body.price,             // Map frontend 'price' to DB 'final_price'
+                    status: body.status || 1
+                },
+            ])
+            .select()
+            .single();
 
-    if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        if (error) throw error;
+        return NextResponse.json(data, { status: 201 });
+    } catch (error: any) {
+        console.error("Booking Error:", error.message);
+        return NextResponse.json({ error: error.message }, { status: 400 });
     }
-
-    return NextResponse.json(data as Appointment, { status: 201 });
 }

@@ -1,26 +1,25 @@
 "use client";
 
-import React, { useState } from "react";
-import { Plus } from "lucide-react";
-import BookAppointmentDrawer from "./BookAppointmentDrawer";
-import { Service } from "@/types/service";
+import React, { useState } from 'react';
+import { Plus } from 'lucide-react';
+import BookAppointmentDrawer from './BookAppointmentDrawer';
 
-export default function BookingDrawerContainer({ services }: { services: Service[] }) {
+export default function BookingDrawerContainer({ specialties = [] }: { specialties: any[] }) {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
         <>
             <button
                 onClick={() => setIsOpen(true)}
-                className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-indigo-100 active:scale-95"
+                className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-indigo-600 transition-all shadow-xl active:scale-95"
             >
-                <Plus size={18} strokeWidth={3} />
-                Book
+                <Plus size={16} />
+                New Appointment
             </button>
 
             {isOpen && (
                 <BookAppointmentDrawer
-                    services={services}
+                    specialties={specialties}
                     onClose={() => setIsOpen(false)}
                 />
             )}

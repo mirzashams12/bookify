@@ -6,7 +6,6 @@ import PaginationControls from "@/components/filter/PaginationControl";
 import { TimeBadge } from "@/components/badge/TimeBadge";
 import { StatusBadge } from "@/components/badge/StatusBadge";
 import { Status } from "@/types/status";
-import { Service } from "@/types/service";
 import BookingDrawerContainer from "@/components/booking/BookingDrawerContainer";
 
 // --- Helpers ---
@@ -38,7 +37,7 @@ async function getAppointments(searchParams: { page?: string, startDate?: string
         const host = await getHostName();
         const query = new URLSearchParams({
             page: searchParams.page || "1",
-            limit: "5",
+            limit: "10",
             ...(searchParams.startDate && { startDate: searchParams.startDate }),
             ...(searchParams.endDate && { endDate: searchParams.endDate }),
             ...(searchParams.status && { status: searchParams.status }),
@@ -59,9 +58,10 @@ async function getStatus() {
     return res.ok ? res.json() : [];
 }
 
-async function getServices() {
+// Fetch Specialties with nested Definitions instead of flat services
+async function getSpecialties() {
     const host = await getHostName();
-    const res = await fetch(`http://${host}/api/services`, { cache: "no-store" });
+    const res = await fetch(`http://${host}/api/specialties`, { cache: "no-store" });
     return res.ok ? res.json() : [];
 }
 
@@ -71,23 +71,32 @@ export default async function AdminAppointmentsPage({
     searchParams: Promise<{ page?: string, date?: string, status?: string, service?: string }>;
 }) {
     const params = await searchParams;
-    const { data: appointments, totalPages } = await getAppointments(params);
-    const status: Status[] = await getStatus();
-    const services: Service[] = await getServices();
+
+    // Concurrent data fetching for better performance
+    const [appointmentsData, status, specialties] = await Promise.all([
+        getAppointments(params),
+        getStatus(),
+        getSpecialties()
+    ]);
+
+    const appointments = appointmentsData.data || [];
+    const totalPages = appointmentsData.totalPages || 0;
     const currentPage = Number(params.page || 1);
 
     return (
         <div className="max-w-[1400px] mx-auto p-6 space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Appointments</h1>
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Appointments</h1>
                     <p className="text-sm text-slate-500 font-medium">Manage and schedule clinic sessions</p>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <FilterDropdown statuses={status} services={services} />
-                    {/* NEW: Drawer Trigger */}
-                    <BookingDrawerContainer services={services} />
+                    {/* Pass specialties to support categorized filtering */}
+                    <FilterDropdown statuses={status} specialties={specialties} />
+
+                    {/* Pass specialties to populate the booking drawer categories */}
+                    <BookingDrawerContainer specialties={specialties} />
                 </div>
             </div>
 
@@ -97,45 +106,50 @@ export default async function AdminAppointmentsPage({
                 </div>
             ) : (
                 <div className="bg-white rounded-[32px] border border-slate-200 shadow-sm overflow-hidden">
-                    <table className="w-full">
-                        <thead className="bg-slate-50/50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                            <tr>
-                                <th className="px-8 py-5 text-left">Customer</th>
-                                <th className="px-8 py-5 text-left">Service</th>
-                                <th className="px-8 py-5 text-left">Date</th>
-                                <th className="px-8 py-5 text-left">Time</th>
-                                <th className="px-8 py-5 text-left">Status</th>
-                                <th className="px-8 py-5 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                            {appointments?.map((appt: Appointment) => {
-                                const serviceName = appt.service?.name || 'N/A';
-                                return (
-                                    <tr key={appt.id} className="group hover:bg-slate-50/50 transition-all">
-                                        <td className="px-8 py-5 font-bold text-slate-900">{appt.name}</td>
-                                        <td className="px-8 py-5">
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${getServiceColor(serviceName)}`}>
-                                                {serviceName}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-5 font-bold text-slate-600 text-sm">{appt.date}</td>
-                                        <td className="px-8 py-5"><TimeBadge time={appt.time} /></td>
-                                        <td className="px-8 py-5"><StatusBadge status={appt.status} /></td>
-                                        <td className="px-8 py-5 text-right">
-                                            <div className="flex justify-end gap-2">
-                                                {appt.status?.name?.toLowerCase() === "pending" && (
-                                                    <button className="px-4 py-2 bg-indigo-600 text-white font-black rounded-xl text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all">
-                                                        Approve
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead className="bg-slate-50/50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                                <tr>
+                                    <th className="px-8 py-5 text-left">Customer</th>
+                                    <th className="px-8 py-5 text-left">Service</th>
+                                    <th className="px-8 py-5 text-left">Date</th>
+                                    <th className="px-8 py-5 text-left">Time</th>
+                                    <th className="px-8 py-5 text-left">Status</th>
+                                    <th className="px-8 py-5 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {appointments.map((appt: Appointment) => {
+                                    // Handles the new nested service definition structure
+                                    const serviceName = appt.service_definitions?.name || 'Standard Session';
+                                    return (
+                                        <tr key={appt.id} className="group hover:bg-slate-50/50 transition-all">
+                                            <td className="px-8 py-5 font-bold text-slate-900 uppercase text-sm">
+                                                {appt.name}
+                                            </td>
+                                            <td className="px-8 py-5">
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter border ${getServiceColor(serviceName)}`}>
+                                                    {serviceName}
+                                                </span>
+                                            </td>
+                                            <td className="px-8 py-5 font-bold text-slate-600 text-sm">{appt.date}</td>
+                                            <td className="px-8 py-5"><TimeBadge time={appt.time} /></td>
+                                            <td className="px-8 py-5"><StatusBadge status={appt.status} /></td>
+                                            <td className="px-8 py-5 text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    {appt.status?.name?.toLowerCase() === "pending" && (
+                                                        <button className="px-4 py-2 bg-indigo-600 text-white font-black rounded-xl text-[10px] uppercase tracking-widest hover:bg-slate-900 transition-all shadow-md active:scale-95">
+                                                            Approve
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                     <PaginationControls currentPage={currentPage} totalPages={totalPages} />
                 </div>
             )}
