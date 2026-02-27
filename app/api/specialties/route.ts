@@ -1,10 +1,8 @@
+// app/api/specialties/route.ts
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-export const dynamic = 'force-dynamic';
-
 export async function GET() {
-    // Fetch specialties along with their loosely coupled service definitions
     const { data, error } = await supabase
         .from('specialties')
         .select(`
@@ -14,14 +12,15 @@ export async function GET() {
                 id,
                 name,
                 base_duration,
-                base_price
+                base_price,
+                rates_chart (
+                    duration_minutes,
+                    price
+                )
             )
         `)
         .order('name', { ascending: true });
 
-    if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data);
 }
