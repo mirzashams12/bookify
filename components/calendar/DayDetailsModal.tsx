@@ -11,14 +11,14 @@ interface DayDetailsModalProps {
     selectedDay: string;
     data: ServiceCount[] | null;
     onClose: () => void;
-    services: any[];
+    specialties: any[];
 }
 
 export default function DayDetailsModal({
     selectedDay,
     data,
     onClose,
-    services
+    specialties
 }: DayDetailsModalProps) {
     const [isBookingOpen, setIsBookingOpen] = useState(false);
 
@@ -130,7 +130,7 @@ export default function DayDetailsModal({
             {/* Nested Booking Drawer */}
             {isBookingOpen && (
                 <BookAppointmentDrawer
-                    services={services}
+                    specialties={specialties}
                     date={selectedDay}
                     onClose={() => setIsBookingOpen(false)}
                 />

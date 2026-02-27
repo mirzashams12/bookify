@@ -32,7 +32,7 @@ export async function GET(req: Request) {
     if (start_date) query = query.gte("date", start_date);
     if (end_date) query = query.lte("date", end_date);
     if (status_id) query = query.eq("status", status_id);
-    if (service_id) query = query.eq("service", service_id);
+    if (service_id) query = query.eq("service_definition_id", service_id);
 
     const { data, error, count } = await query
         .order("date", { ascending: false })

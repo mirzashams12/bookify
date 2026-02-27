@@ -12,12 +12,14 @@ import {
 } from "recharts";
 import { useMemo } from "react";
 import dayjs from "dayjs";
+import { Service } from "@/types/service";
 
 interface Props {
     bookingsData: BookingsGroupedByDate;
+    specialities: Service[]
 }
 
-export default function DashboardClient({ bookingsData }: Props) {
+export default function DashboardClient({ bookingsData, specialities }: Props) {
     const today = dayjs().format("YYYY-MM-DD");
 
     const todayData = bookingsData[today] || {};
@@ -58,7 +60,7 @@ export default function DashboardClient({ bookingsData }: Props) {
 
                 {/* HEATMAP */}
                 <div className="col-span-3 bg-zinc-900/70 backdrop-blur rounded-2xl p-6 border border-zinc-800 shadow-xl">
-                    <HeatmapCalendar bookingsData={bookingsData} />
+                    <HeatmapCalendar bookingsData={bookingsData} specialties={specialities} />
                 </div>
 
                 {/* SIDE CARDS */}

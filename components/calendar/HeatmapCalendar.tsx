@@ -20,10 +20,10 @@ import { Service } from "@/types/service";
 
 interface HeatmapCalendarProps {
     bookingsData: BookingsGroupedByDate;
-    services: Service[];
+    specialties: Service[];
 }
 
-const HeatmapCalendar = ({ bookingsData, services }: HeatmapCalendarProps) => {
+const HeatmapCalendar = ({ bookingsData, specialties }: HeatmapCalendarProps) => {
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDay, setSelectedDay] = useState<string | null>(null);
     const [openDropdown, setOpenDropdown] = useState<"month" | "year" | null>(null);
@@ -224,7 +224,7 @@ const HeatmapCalendar = ({ bookingsData, services }: HeatmapCalendarProps) => {
                 <DayDetailsModal
                     selectedDay={selectedDay}
                     data={bookingsData[selectedDay] || null}
-                    services={services} // Ensure this is available in your Heatmap component
+                    specialties={specialties} // Ensure this is available in your Heatmap component
                     onClose={() => setSelectedDay(null)}
                 />
             )}
