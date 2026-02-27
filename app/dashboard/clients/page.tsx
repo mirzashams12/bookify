@@ -1,28 +1,42 @@
 import ClientListContainer from "@/components/clients/ClientListContainer";
-import { Plus } from "lucide-react";
+import { headers } from "next/headers";
 
-async function getClients() {
-    // Replace with your actual DB fetch
-    const res = await fetch(`http://localhost:3000/api/clients`, { cache: "no-store" });
+async function getClients(page: string) {
+    const headersList = await headers();
+    const host = headersList.get("host");
+
+    // Pass page and limit to the API
+    const res = await fetch(`http://${host}/api/clients?page=${page}&limit=10`, {
+        cache: "no-store"
+    });
+
+    if (!res.ok) return { data: [], totalPages: 1 };
     return res.json();
 }
 
-export default async function ClientsPage() {
-    const clients: any[] = []; // await getClients();
+export default async function ClientsPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ page?: string }>;
+}) {
+    const params = await searchParams;
+    const currentPage = params.page || "1";
+    const { data, totalPages } = await getClients(currentPage);
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-700">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Clients</h1>
-                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">
-                        Manage your patient database
-                    </p>
-                </div>
+        <div className="max-w-[1400px] mx-auto p-6 space-y-8 animate-in fade-in duration-700">
+            <div>
+                <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Clients</h1>
+                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">
+                    Manage patient profiles and insurance
+                </p>
             </div>
 
-            {/* Passing data to a Client Component to handle search/modals */}
-            <ClientListContainer initialClients={clients} />
+            <ClientListContainer
+                initialClients={data}
+                totalPages={totalPages}
+                currentPage={parseInt(currentPage)}
+            />
         </div>
     );
 }

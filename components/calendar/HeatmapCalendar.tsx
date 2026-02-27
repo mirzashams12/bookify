@@ -16,12 +16,14 @@ import {
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ChevronDown } from "lucide-react";
 import { BookingsGroupedByDate } from "@/types/bookings";
 import DayDetailsModal from "./DayDetailsModal";
+import { Service } from "@/types/service";
 
 interface HeatmapCalendarProps {
     bookingsData: BookingsGroupedByDate;
+    services: Service[];
 }
 
-const HeatmapCalendar = ({ bookingsData }: HeatmapCalendarProps) => {
+const HeatmapCalendar = ({ bookingsData, services }: HeatmapCalendarProps) => {
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDay, setSelectedDay] = useState<string | null>(null);
     const [openDropdown, setOpenDropdown] = useState<"month" | "year" | null>(null);
@@ -222,6 +224,7 @@ const HeatmapCalendar = ({ bookingsData }: HeatmapCalendarProps) => {
                 <DayDetailsModal
                     selectedDay={selectedDay}
                     data={bookingsData[selectedDay] || null}
+                    services={services} // Ensure this is available in your Heatmap component
                     onClose={() => setSelectedDay(null)}
                 />
             )}
