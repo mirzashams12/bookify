@@ -3,14 +3,13 @@ import React, { useState, useRef, useEffect, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Filter, Calendar, CheckCircle, Sparkles, Loader2 } from "lucide-react";
 import { Status } from "@/types/status";
-import { Service } from "@/types/service";
 
 interface FilterDropdownProps {
     statuses: Status[];
-    services: Service[];
+    specialties: any[]; // Updated from services to specialties
 }
 
-export default function FilterDropdown({ statuses, services }: FilterDropdownProps) {
+export default function FilterDropdown({ statuses, specialties }: FilterDropdownProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
 
@@ -156,7 +155,7 @@ export default function FilterDropdown({ statuses, services }: FilterDropdownPro
                             </select>
                         </div>
 
-                        {/* Service */}
+                        {/* Specialty/Service Selection */}
                         <div className="space-y-2">
                             <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-2">
                                 <Sparkles size={12} /> Services
@@ -167,10 +166,14 @@ export default function FilterDropdown({ statuses, services }: FilterDropdownPro
                                 className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2 text-xs font-bold outline-none cursor-pointer"
                             >
                                 <option value="">All Services</option>
-                                {services.map((s) => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.name}
-                                    </option>
+                                {specialties.map((spec) => (
+                                    <optgroup key={spec.id} label={spec.name}>
+                                        {spec.service_definitions?.map((s: any) => (
+                                            <option key={s.id} value={s.id}>
+                                                {s.name}
+                                            </option>
+                                        ))}
+                                    </optgroup>
                                 ))}
                             </select>
                         </div>
