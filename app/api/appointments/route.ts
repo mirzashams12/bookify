@@ -15,7 +15,7 @@ export async function GET(req: Request) {
     const start_date = searchParams.get("startDate");
     const end_date = searchParams.get("endDate");
     const status_id = searchParams.get("status");
-    const service_id = searchParams.get("service");
+    const provider_id = searchParams.get("provider");
 
     let query = supabase
         .from("appointments")
@@ -25,14 +25,16 @@ export async function GET(req: Request) {
             name,
             specialties (name)
         ),
-        status:appointments_status_fkey (id, name)
+        status:appointments_status_fkey (id, name),
+        providers (id, fullname)
     `, { count: "exact" });
 
     // Conditionally apply filters
     if (start_date) query = query.gte("date", start_date);
     if (end_date) query = query.lte("date", end_date);
     if (status_id) query = query.eq("status", status_id);
-    if (service_id) query = query.eq("service_definition_id", service_id);
+    if (provider_id) query = query.eq("provider_id", provider_id);
+
 
     const { data, error, count } = await query
         .order("date", { ascending: false })

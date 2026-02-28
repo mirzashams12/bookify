@@ -32,7 +32,7 @@ async function getHostName() {
     return headersList.get("host");
 }
 
-async function getAppointments(searchParams: { page?: string, startDate?: string, endDate?: string, status?: string, service?: string }) {
+async function getAppointments(searchParams: { page?: string, startDate?: string, endDate?: string, status?: string, provider?: string }) {
     try {
         const host = await getHostName();
         const query = new URLSearchParams({
@@ -41,7 +41,7 @@ async function getAppointments(searchParams: { page?: string, startDate?: string
             ...(searchParams.startDate && { startDate: searchParams.startDate }),
             ...(searchParams.endDate && { endDate: searchParams.endDate }),
             ...(searchParams.status && { status: searchParams.status }),
-            ...(searchParams.service && { service: searchParams.service }),
+            ...(searchParams.provider && { provider: searchParams.provider }),
         }).toString();
 
         const res = await fetch(`http://${host}/api/appointments?${query}`, { cache: "no-store" });

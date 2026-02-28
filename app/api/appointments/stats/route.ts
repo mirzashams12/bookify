@@ -1,19 +1,18 @@
+// app/api/appointments/stats/route.ts
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { BookingsGroupedByDate, ServiceCount } from "@/types/bookings";
 
 export async function GET() {
-    // 1. Fetch data using the updated UUID-based relationship
-    // Using !inner ensures we only get appointments with valid service data
+    // 1. Fetch appointments including provider details
     const { data, error } = await supabase
         .from("appointments")
         .select(`
             date,
             final_price,
             final_duration,
-            service_definitions!inner (
+            providers!inner (
                 id,
-                name
+                fullname
             )
         `);
 
@@ -22,50 +21,41 @@ export async function GET() {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const bookingsData: BookingsGroupedByDate = {};
+    const bookingsData: Record<string, any[]> = {};
 
-    // 2. Process and group the data
+    // 2. Process and group the data by Provider
     data?.forEach((curr: any) => {
         const date = curr.date;
+        const providerObj = curr.providers;
+        const providerId = providerObj?.id;
+        const providerName = providerObj?.fullname || "Unknown Provider";
 
-        // Access nested join data safely
-        const serviceObj = curr.service_definitions;
-        const serviceId = serviceObj?.id;
-        const serviceName = serviceObj?.name || "Unknown Service";
-
-        // Ensure values are numbers (Supabase numeric/int8 often come as strings)
         const apptPrice = Number(curr.final_price) || 0;
         const apptDuration = Number(curr.final_duration) || 0;
 
-        // Safety check to prevent grouping errors
-        if (!serviceId) return;
+        if (!providerId) return;
 
-        // Initialize the date array if it doesn't exist
         if (!bookingsData[date]) {
             bookingsData[date] = [];
         }
 
-        // Find if this service type already exists for this specific date
-        const existingServiceIndex = bookingsData[date].findIndex(
-            (s) => s.id === serviceId
+        const existingProviderIndex = bookingsData[date].findIndex(
+            (p) => p.id === providerId
         );
 
-        if (existingServiceIndex !== -1) {
-            // Update existing entry: Increment count and aggregate totals
-            const existing = bookingsData[date][existingServiceIndex];
+        if (existingProviderIndex !== -1) {
+            const existing = bookingsData[date][existingProviderIndex];
             existing.count += 1;
             existing.price += apptPrice;
             existing.duration += apptDuration;
         } else {
-            // Create new ServiceCount entry for this date
-            const newServiceEntry: ServiceCount = {
-                id: serviceId,
-                name: serviceName,
+            bookingsData[date].push({
+                id: providerId,
+                name: providerName, // This is now Provider Name
                 count: 1,
                 price: apptPrice,
                 duration: apptDuration
-            };
-            bookingsData[date].push(newServiceEntry);
+            });
         }
     });
 

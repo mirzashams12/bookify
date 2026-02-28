@@ -205,12 +205,13 @@ const HeatmapCalendar = ({ bookingsData, specialties }: HeatmapCalendarProps) =>
 
                             {isCurrMonth && uniqueServiceTypesCount > 0 && (
                                 <div className="mt-auto">
-                                    <p className="text-[10px] font-black leading-tight truncate uppercase tracking-tighter">
+                                    <p className="text-[10px] font-black leading-tight truncate uppercase tracking-tighter text-slate-500">
+                                        {/* Show the first provider's name */}
                                         {dayServices[0].name}
                                     </p>
                                     {uniqueServiceTypesCount > 1 && (
                                         <p className="text-[8px] font-bold opacity-60 mt-0.5">
-                                            + {uniqueServiceTypesCount - 1} more
+                                            + {uniqueServiceTypesCount - 1} other providers
                                         </p>
                                     )}
                                 </div>

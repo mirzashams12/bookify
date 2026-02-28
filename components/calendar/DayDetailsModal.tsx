@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { format } from "date-fns";
-import { X, Calendar, ListChecks, Plus, ArrowUpRight } from "lucide-react";
+import { X, Calendar, ListChecks, Plus, ArrowUpRight, Users } from "lucide-react";
 import Link from "next/link";
 import { ServiceCount } from "@/types/bookings";
 import BookAppointmentDrawer from "@/components/booking/BookAppointmentDrawer";
@@ -71,43 +71,47 @@ export default function DayDetailsModal({
                             </div>
                         )}
 
-                        {/* Service Breakdown (Links Restored) */}
                         <div className="space-y-4">
                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 px-1">
-                                <ListChecks size={14} /> Service Breakdown
+                                <Users size={14} /> Provider Schedule
                             </h4>
                             <div className="space-y-3">
                                 {data && data.length > 0 ? (
-                                    data.map((service) => (
+                                    data.map((provider) => (
                                         <Link
-                                            key={service.id}
+                                            key={provider.id}
                                             href={{
                                                 pathname: "/dashboard/appointments",
                                                 query: {
                                                     startDate: selectedDay,
                                                     endDate: selectedDay,
                                                     page: 1,
-                                                    service: service.id,
+                                                    provider: provider.id, // Updated filter key
                                                 },
                                             }}
                                             className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-indigo-300 hover:bg-white hover:shadow-md transition-all hover:translate-x-1"
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-white rounded-lg group-hover:bg-indigo-50 transition-colors">
-                                                    <ArrowUpRight size={14} className="text-slate-400 group-hover:text-indigo-500" />
+                                                <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-500 transition-colors">
+                                                    <Users size={14} />
                                                 </div>
                                                 <span className="font-bold text-slate-700 uppercase text-[11px] tracking-tight">
-                                                    {service.name}
+                                                    {provider.name}
                                                 </span>
                                             </div>
-                                            <span className="bg-white px-3 py-1 rounded-xl shadow-sm text-xs font-black text-indigo-600 border border-slate-100 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all">
-                                                {service.count}
-                                            </span>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-[10px] font-bold text-slate-400">
+                                                    {provider.count} Appt{provider.count > 1 ? 's' : ''}
+                                                </span>
+                                                <span className="bg-white px-3 py-1 rounded-xl shadow-sm text-xs font-black text-indigo-600 border border-slate-100 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all">
+                                                    View
+                                                </span>
+                                            </div>
                                         </Link>
                                     ))
                                 ) : (
                                     <div className="py-10 flex flex-col items-center justify-center opacity-30 italic text-slate-500 text-sm">
-                                        Empty Schedule
+                                        No Providers Scheduled
                                     </div>
                                 )}
                             </div>
