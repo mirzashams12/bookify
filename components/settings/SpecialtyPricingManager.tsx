@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, X, DollarSign, Clock, ChevronRight, Check, AlertCircle, RotateCcw } from 'lucide-react';
+import { Plus, Trash2, Edit2, X, DollarSign, Clock, ChevronRight, Check, AlertCircle, RotateCcw, Loader2 } from 'lucide-react';
 
 export default function SpecialtyPricingManager() {
     const [specialties, setSpecialties] = useState<any[]>([]);
@@ -27,6 +27,13 @@ export default function SpecialtyPricingManager() {
         fetchSpecialties();
     }, []);
 
+    // RESET UI when switching specialties
+    useEffect(() => {
+        setIsAddingService(false);
+        setAddingTierToServiceId(null);
+        setNewTier({ duration: "", price: "" });
+    }, [activeSpecialty?.id]);
+
     async function fetchSpecialties() {
         setLoading(true);
         try {
@@ -44,9 +51,8 @@ export default function SpecialtyPricingManager() {
         }
     }
 
-    // --- Specialty Operations ---
     async function handleAddSpecialty() {
-        if (!newSpecialtyName.trim()) return;
+        if (!newSpecialtyName.trim() || actionLoading) return;
         setActionLoading(true);
         const res = await fetch('/api/specialties', {
             method: 'POST',
@@ -56,13 +62,14 @@ export default function SpecialtyPricingManager() {
         if (res.ok) {
             setNewSpecialtyName("");
             setIsAddingSpecialty(false);
-            fetchSpecialties();
+            await fetchSpecialties();
         }
         setActionLoading(false);
     }
 
     async function handleUpdateSpecialty(id: string) {
-        if (!editSpecialtyName.trim()) return;
+        if (!editSpecialtyName.trim() || actionLoading) return;
+        setActionLoading(true);
         const res = await fetch('/api/specialties', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -70,24 +77,27 @@ export default function SpecialtyPricingManager() {
         });
         if (res.ok) {
             setEditingSpecialtyId(null);
-            fetchSpecialties();
+            await fetchSpecialties();
         }
+        setActionLoading(false);
     }
 
     async function handleToggleArchive(spec: any) {
+        if (actionLoading) return;
         const action = spec.is_active ? "archive" : "restore";
         if (!confirm(`Are you sure you want to ${action} this specialty?`)) return;
+        setActionLoading(true);
         const res = await fetch('/api/specialties', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: spec.id, is_active: !spec.is_active })
         });
-        if (res.ok) fetchSpecialties();
+        if (res.ok) await fetchSpecialties();
+        setActionLoading(false);
     }
 
-    // --- Service Operations ---
     async function handleAddService() {
-        if (!newService.name.trim() || !activeSpecialty) return;
+        if (!newService.name.trim() || !activeSpecialty || actionLoading) return;
         if (newService.base_duration % 15 !== 0) {
             alert("Duration must be in 15-minute increments.");
             return;
@@ -106,19 +116,21 @@ export default function SpecialtyPricingManager() {
         if (res.ok) {
             setNewService({ name: "", base_duration: 30, base_price: 50 });
             setIsAddingService(false);
-            fetchSpecialties();
+            await fetchSpecialties();
         }
         setActionLoading(false);
     }
 
     async function handleDeleteService(id: string) {
-        if (!confirm("Delete this service?")) return;
+        if (!confirm("Delete this service?") || actionLoading) return;
+        setActionLoading(true);
         const res = await fetch(`/api/services?id=${id}`, { method: 'DELETE' });
-        if (res.ok) fetchSpecialties();
+        if (res.ok) await fetchSpecialties();
+        setActionLoading(false);
     }
 
-    // --- Tier Operations ---
     const handleSaveTier = async (service: any) => {
+        if (actionLoading) return;
         const duration = parseInt(newTier.duration);
         const price = parseFloat(newTier.price);
 
@@ -160,12 +172,14 @@ export default function SpecialtyPricingManager() {
     };
 
     const handleDeleteTier = async (tierId: string) => {
-        if (!confirm("Delete this pricing tier?")) return;
+        if (!confirm("Delete this pricing tier?") || actionLoading) return;
+        setActionLoading(true);
         const res = await fetch(`/api/rates?id=${tierId}`, { method: 'DELETE' });
-        if (res.ok) fetchSpecialties();
+        if (res.ok) await fetchSpecialties();
+        setActionLoading(false);
     };
 
-    if (loading && specialties.length === 0) return <div className="p-10 text-slate-400 font-black uppercase text-xs">Loading...</div>;
+    if (loading && specialties.length === 0) return <div className="p-10 text-slate-400 font-black uppercase text-xs animate-pulse">Loading Specialty Data...</div>;
 
     return (
         <div className="grid grid-cols-12 gap-8 h-[calc(100vh-250px)]">
@@ -173,13 +187,22 @@ export default function SpecialtyPricingManager() {
             <div className="col-span-4 border-r border-slate-100 pr-6 space-y-4 overflow-y-auto no-scrollbar">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xs font-black uppercase text-slate-400 tracking-widest">Specialties</h3>
-                    <button type="button" onClick={() => setIsAddingSpecialty(true)} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><Plus size={16} /></button>
+                    <button
+                        disabled={actionLoading}
+                        type="button"
+                        onClick={() => setIsAddingSpecialty(true)}
+                        className="p-2 bg-indigo-50 text-indigo-600 rounded-lg disabled:opacity-50"
+                    >
+                        <Plus size={16} />
+                    </button>
                 </div>
 
                 {isAddingSpecialty && (
                     <div className="flex gap-2 mb-4 animate-in slide-in-from-top-2">
                         <input autoFocus className="flex-1 p-3 bg-slate-50 rounded-xl text-sm font-bold outline-none border border-indigo-100 text-slate-900" value={newSpecialtyName} onChange={(e) => setNewSpecialtyName(e.target.value)} />
-                        <button type="button" onClick={handleAddSpecialty} className="p-3 bg-indigo-600 text-white rounded-xl"><Check size={16} /></button>
+                        <button disabled={actionLoading} type="button" onClick={handleAddSpecialty} className="p-3 bg-indigo-600 text-white rounded-xl">
+                            {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                        </button>
                         <button type="button" onClick={() => setIsAddingSpecialty(false)} className="p-3 bg-slate-100 text-slate-400 rounded-xl"><X size={16} /></button>
                     </div>
                 )}
@@ -190,14 +213,17 @@ export default function SpecialtyPricingManager() {
                             {editingSpecialtyId === spec.id ? (
                                 <div className="flex gap-2 p-1">
                                     <input autoFocus className="flex-1 p-3 bg-white rounded-xl text-sm font-bold outline-none border border-indigo-500 text-slate-900" value={editSpecialtyName} onChange={(e) => setEditSpecialtyName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUpdateSpecialty(spec.id)} />
-                                    <button type="button" onClick={() => handleUpdateSpecialty(spec.id)} className="p-3 text-indigo-600"><Check size={18} /></button>
+                                    <button disabled={actionLoading} type="button" onClick={() => handleUpdateSpecialty(spec.id)} className="p-3 text-indigo-600">
+                                        {actionLoading ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
+                                    </button>
                                 </div>
                             ) : (
                                 <div className="flex items-center">
                                     <button
+                                        disabled={actionLoading}
                                         type="button"
                                         onClick={() => setActiveSpecialty(spec)}
-                                        className={`flex-1 flex justify-between items-center p-4 rounded-2xl text-left transition-all ${activeSpecialty?.id === spec.id ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-600'}`}
+                                        className={`flex-1 flex justify-between items-center p-4 rounded-2xl text-left transition-all ${activeSpecialty?.id === spec.id ? 'bg-slate-900 text-white shadow-lg translate-x-1' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
                                     >
                                         <div className="flex flex-col">
                                             <span className="font-bold text-sm uppercase">{spec.name}</span>
@@ -234,7 +260,9 @@ export default function SpecialtyPricingManager() {
                                 </p>
                             </div>
                             {activeSpecialty.is_active && (
-                                <button type="button" onClick={() => setIsAddingService(true)} className="px-6 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase"><Plus size={14} className="inline mr-2" /> Add Service</button>
+                                <button disabled={actionLoading} type="button" onClick={() => setIsAddingService(true)} className="px-6 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase hover:shadow-lg transition-all">
+                                    <Plus size={14} className="inline mr-2" /> Add Service
+                                </button>
                             )}
                         </div>
 
@@ -243,7 +271,12 @@ export default function SpecialtyPricingManager() {
                                 <input className="col-span-3 p-4 rounded-2xl bg-white text-sm font-bold text-slate-900" placeholder="Service Name" value={newService.name} onChange={e => setNewService({ ...newService, name: e.target.value })} />
                                 <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-2">Duration</label><input type="number" step="15" className="w-full p-4 rounded-2xl bg-white text-sm font-bold text-slate-900" value={newService.base_duration} onChange={e => setNewService({ ...newService, base_duration: parseInt(e.target.value) })} /></div>
                                 <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-2">Price</label><input type="number" className="w-full p-4 rounded-2xl bg-white text-sm font-bold text-slate-900" value={newService.base_price} onChange={e => setNewService({ ...newService, base_price: parseInt(e.target.value) })} /></div>
-                                <div className="flex items-end gap-2"><button type="button" onClick={handleAddService} className="flex-1 bg-indigo-600 text-white p-4 rounded-2xl font-black text-[10px] uppercase">Save</button><button type="button" onClick={() => setIsAddingService(false)} className="bg-slate-200 text-slate-600 p-4 rounded-2xl"><X size={18} /></button></div>
+                                <div className="flex items-end gap-2">
+                                    <button disabled={actionLoading} type="button" onClick={handleAddService} className="flex-1 bg-indigo-600 text-white p-4 rounded-2xl font-black text-[10px] uppercase">
+                                        {actionLoading ? <Loader2 size={14} className="animate-spin inline mr-2" /> : "Save"}
+                                    </button>
+                                    <button type="button" onClick={() => setIsAddingService(false)} className="bg-slate-200 text-slate-600 p-4 rounded-2xl"><X size={18} /></button>
+                                </div>
                             </div>
                         )}
 
@@ -259,16 +292,17 @@ export default function SpecialtyPricingManager() {
                                             </div>
                                         </div>
                                         {activeSpecialty.is_active && (
-                                            <button type="button" onClick={() => handleDeleteService(service.id)} className="p-2 text-slate-200 hover:text-red-500"><Trash2 size={18} /></button>
+                                            <button disabled={actionLoading} type="button" onClick={() => handleDeleteService(service.id)} className="p-2 text-slate-200 hover:text-red-500"><Trash2 size={18} /></button>
                                         )}
                                     </div>
 
                                     <div className="bg-slate-50/50 rounded-[28px] p-6 border border-slate-50">
                                         <div className="grid grid-cols-4 gap-4">
-                                            {service.rates_chart?.map((rate: any) => (
+                                            {/* Sort rates for clean increment display */}
+                                            {service.rates_chart?.sort((a: any, b: any) => a.duration_minutes - b.duration_minutes).map((rate: any) => (
                                                 <div key={rate.id} className="relative group/tier bg-white p-4 rounded-2xl border border-slate-100 flex flex-col items-center">
                                                     {activeSpecialty.is_active && (
-                                                        <button type="button" onClick={() => handleDeleteTier(rate.id)} className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover/tier:opacity-100 transition-all"><X size={10} /></button>
+                                                        <button disabled={actionLoading} type="button" onClick={() => handleDeleteTier(rate.id)} className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover/tier:opacity-100 transition-all"><X size={10} /></button>
                                                     )}
                                                     <span className="text-[10px] font-black text-slate-400 uppercase">{rate.duration_minutes}m</span>
                                                     <span className="text-sm font-black text-slate-900">${rate.price}</span>
@@ -277,14 +311,34 @@ export default function SpecialtyPricingManager() {
 
                                             {activeSpecialty.is_active && (
                                                 addingTierToServiceId === service.id ? (
-                                                    <div className="col-span-2 bg-indigo-50 p-2 rounded-2xl border border-indigo-100 flex items-center gap-2">
-                                                        <input type="number" step="15" className="w-16 p-2 bg-white rounded-lg text-[10px] font-bold outline-none" placeholder="Min" value={newTier.duration} onChange={e => setNewTier({ ...newTier, duration: e.target.value })} />
-                                                        <input type="number" className="w-16 p-2 bg-white rounded-lg text-[10px] font-bold outline-none" placeholder="$" value={newTier.price} onChange={e => setNewTier({ ...newTier, price: e.target.value })} />
-                                                        <button type="button" onClick={() => handleSaveTier(service)} className="p-2 bg-indigo-600 text-white rounded-lg"><Check size={12} /></button>
+                                                    <div className="col-span-2 bg-indigo-50 p-2 rounded-2xl border border-indigo-100 flex items-center gap-2 animate-in zoom-in-95">
+                                                        <input
+                                                            type="number"
+                                                            step="15"
+                                                            className="w-16 p-2 bg-white rounded-lg text-[10px] font-bold outline-none border border-transparent focus:border-indigo-300"
+                                                            placeholder="Min"
+                                                            value={newTier.duration}
+                                                            onChange={e => setNewTier({ ...newTier, duration: e.target.value })}
+                                                        />
+                                                        <input
+                                                            type="number"
+                                                            className="w-16 p-2 bg-white rounded-lg text-[10px] font-bold outline-none border border-transparent focus:border-indigo-300"
+                                                            placeholder="$"
+                                                            value={newTier.price}
+                                                            onChange={e => setNewTier({ ...newTier, price: e.target.value })}
+                                                        />
+                                                        <button
+                                                            disabled={actionLoading}
+                                                            type="button"
+                                                            onClick={() => handleSaveTier(service)}
+                                                            className="p-2 bg-indigo-600 text-white rounded-lg"
+                                                        >
+                                                            {actionLoading ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                                                        </button>
                                                         <button type="button" onClick={() => setAddingTierToServiceId(null)} className="p-2 text-slate-400"><X size={12} /></button>
                                                     </div>
                                                 ) : (
-                                                    <button type="button" onClick={() => setAddingTierToServiceId(service.id)} className="border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center py-4 text-slate-300 hover:text-indigo-500 transition-all">
+                                                    <button type="button" onClick={() => setAddingTierToServiceId(service.id)} className="border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center py-4 text-slate-300 hover:border-indigo-500 transition-all">
                                                         <Plus size={16} />
                                                         <span className="text-[8px] font-black uppercase mt-1">Add Tier</span>
                                                     </button>
@@ -299,7 +353,7 @@ export default function SpecialtyPricingManager() {
                 ) : (
                     <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4">
                         <div className="p-6 bg-slate-50 rounded-full shadow-inner"><DollarSign size={48} /></div>
-                        <p className="text-[10px] font-black uppercase tracking-widest">Select a specialty to begin</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest animate-pulse">Select a specialty to begin configuration</p>
                     </div>
                 )}
             </div>
