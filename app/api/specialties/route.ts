@@ -8,6 +8,7 @@ export async function GET() {
         .select(`
             id,
             name,
+            is_active,
             service_definitions (
                 id,
                 name,
@@ -68,46 +69,37 @@ export async function POST(req: Request) {
 
 // PATCH: Update an existing specialty name
 export async function PATCH(req: Request) {
-    try {
-        const body = await req.json();
-        const { id, name } = body;
+    const body = await req.json();
+    const { id, name, is_active } = body;
 
-        if (!id || !name) {
-            return NextResponse.json({ error: "ID and name are required" }, { status: 400 });
-        }
-
-        const { data, error } = await supabase
-            .from("specialties")
-            .update({ name })
-            .eq("id", id)
-            .select()
-            .single();
-
-        if (error) throw error;
-        return NextResponse.json(data);
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    // Dynamically build update object based on what's provided
+    const updateData: any = {};
+    if (name !== undefined) {
+        updateData.name = name;
+        updateData.slug = name.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-');
     }
+    if (is_active !== undefined) updateData.is_active = is_active;
+
+    const { data, error } = await supabase
+        .from("specialties")
+        .update(updateData)
+        .eq("id", id)
+        .select()
+        .single();
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(data);
 }
 
-// DELETE: Remove a specialty
 export async function DELETE(req: Request) {
-    try {
-        const { searchParams } = new URL(req.url);
-        const id = searchParams.get("id");
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
 
-        if (!id) {
-            return NextResponse.json({ error: "ID is required" }, { status: 400 });
-        }
+    const { error } = await supabase
+        .from("specialties")
+        .update({ is_active: false }) // Soft delete!
+        .eq("id", id);
 
-        const { error } = await supabase
-            .from("specialties")
-            .delete()
-            .eq("id", id);
-
-        if (error) throw error;
-        return NextResponse.json({ success: true });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true });
 }

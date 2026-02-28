@@ -177,7 +177,7 @@ export default function BookAppointmentDrawer({
                         <section className="space-y-4">
                             <h2 className="text-[10px] font-black text-indigo-600 uppercase flex items-center gap-2"><Stethoscope size={14} /> Provider</h2>
                             <div className="grid grid-cols-2 gap-2">
-                                {allProviders.map(p => (
+                                {allProviders.filter(s => s.is_active == true).map(p => (
                                     <button
                                         key={p.id}
                                         type="button"
