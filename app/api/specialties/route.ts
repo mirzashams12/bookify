@@ -15,6 +15,7 @@ export async function GET() {
                 base_duration,
                 base_price,
                 rates_chart (
+                    id,
                     duration_minutes,
                     price
                 )
