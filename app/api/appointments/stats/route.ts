@@ -1,45 +1,60 @@
+// app/api/appointments/stats/route.ts
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { BookingsGroupedByDate } from "@/types/bookings";
 
 export async function GET() {
+    // 1. Fetch appointments including provider details
     const { data, error } = await supabase
         .from("appointments")
         .select(`
-        date,
-        service:service (
-          id,
-          name
-        )
-      `);
+            date,
+            final_price,
+            final_duration,
+            providers!inner (
+                id,
+                fullname
+            )
+        `);
 
-    if (error)
+    if (error) {
+        console.error("Supabase Error:", error.message);
         return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
-    const bookingsData: BookingsGroupedByDate = {};
+    const bookingsData: Record<string, any[]> = {};
 
-    data.forEach((curr: any) => {
+    // 2. Process and group the data by Provider
+    data?.forEach((curr: any) => {
         const date = curr.date;
-        const serviceId = curr.service?.id;
-        const serviceName = curr.service?.name || "Unknown";
+        const providerObj = curr.providers;
+        const providerId = providerObj?.id;
+        const providerName = providerObj?.fullname || "Unknown Provider";
+
+        const apptPrice = Number(curr.final_price) || 0;
+        const apptDuration = Number(curr.final_duration) || 0;
+
+        if (!providerId) return;
 
         if (!bookingsData[date]) {
             bookingsData[date] = [];
         }
 
-        const existingService = bookingsData[date].find(
-            (s) => s.id === serviceId
+        const existingProviderIndex = bookingsData[date].findIndex(
+            (p) => p.id === providerId
         );
 
-        if (existingService) {
-            existingService.count += 1;
+        if (existingProviderIndex !== -1) {
+            const existing = bookingsData[date][existingProviderIndex];
+            existing.count += 1;
+            existing.price += apptPrice;
+            existing.duration += apptDuration;
         } else {
             bookingsData[date].push({
-                id: serviceId,
-                name: serviceName,
+                id: providerId,
+                name: providerName, // This is now Provider Name
                 count: 1,
-                price: 100,
-                duration: 60
+                price: apptPrice,
+                duration: apptDuration
             });
         }
     });

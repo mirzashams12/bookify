@@ -15,16 +15,17 @@ async function getStats() {
     return res.json();
 }
 
-async function getServices() {
+async function getSpecialties() {
     const headersList = headers();
     const host = (await headersList).get("host");
-    const res = await fetch(`http://${host}/api/services`, { cache: "no-store" });
+
+    const res = await fetch(`http://${host}/api/specialties`, { cache: "no-store" });
     return res.ok ? res.json() : [];
 }
 
 export default async function DashboardPage() {
     const bookingsData = await getStats();
-    const services = await getServices();
+    const specialties = await getSpecialties();
 
     return (
         <div className="bg-white rounded-[40px] p-8 lg:p-12 border border-slate-200 shadow-[0_20px_60px_rgba(0,0,0,0.05)] animate-in fade-in duration-700">
@@ -32,7 +33,7 @@ export default async function DashboardPage() {
 
                 {/* Left Section: Calendar */}
                 <div className="flex-1 min-w-0">
-                    <HeatmapCalendar bookingsData={bookingsData} services={services} />
+                    <HeatmapCalendar bookingsData={bookingsData} specialties={specialties} />
                 </div>
 
                 {/* Right Section: Analytics Panel */}

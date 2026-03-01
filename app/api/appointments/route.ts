@@ -15,7 +15,7 @@ export async function GET(req: Request) {
     const start_date = searchParams.get("startDate");
     const end_date = searchParams.get("endDate");
     const status_id = searchParams.get("status");
-    const service_id = searchParams.get("service");
+    const provider_id = searchParams.get("provider");
 
     let query = supabase
         .from("appointments")
@@ -25,14 +25,16 @@ export async function GET(req: Request) {
             name,
             specialties (name)
         ),
-        status:appointments_status_fkey (id, name)
+        status:appointments_status_fkey (id, name),
+        providers (id, fullname)
     `, { count: "exact" });
 
     // Conditionally apply filters
     if (start_date) query = query.gte("date", start_date);
     if (end_date) query = query.lte("date", end_date);
     if (status_id) query = query.eq("status", status_id);
-    if (service_id) query = query.eq("service", service_id);
+    if (provider_id) query = query.eq("provider_id", provider_id);
+
 
     const { data, error, count } = await query
         .order("date", { ascending: false })
@@ -58,19 +60,18 @@ export async function POST(req: Request) {
 
         const { data, error } = await supabase
             .from("appointments")
-            .insert([
-                {
-                    client_id: body.clientId,             // Matches new UUID column
-                    service_definition_id: body.serviceId, // Matches new UUID column
-                    name: body.name,
-                    email: body.email,
-                    date: body.date,
-                    time: body.time,
-                    final_duration: body.duration,        // Map frontend 'duration' to DB 'final_duration'
-                    final_price: body.price,             // Map frontend 'price' to DB 'final_price'
-                    status: body.status || 1
-                },
-            ])
+            .insert([{
+                client_id: body.clientId,
+                provider_id: body.providerId, // Added this
+                service_definition_id: body.serviceId,
+                name: body.name,
+                email: body.email,
+                date: body.date,
+                time: body.time,
+                final_duration: body.duration,
+                final_price: body.price,
+                status: body.status || 1
+            }])
             .select()
             .single();
 

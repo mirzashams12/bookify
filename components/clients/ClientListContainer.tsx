@@ -67,9 +67,9 @@ export default function ClientListContainer({ initialClients, totalPages, curren
                                     </div>
                                 </td>
                                 <td className="px-8 py-6">
-                                    {client.insuranceProvider ? (
+                                    {client.insurance_provider ? (
                                         <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg uppercase border border-emerald-100">
-                                            {client.insuranceProvider}
+                                            {client.insurance_provider}
                                         </span>
                                     ) : (
                                         <span className="text-[10px] font-bold text-slate-300 uppercase italic">Self-Pay</span>

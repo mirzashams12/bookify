@@ -28,9 +28,9 @@ export default function CreateClientModal({ client, onClose }: CreateClientModal
             fullname: formData.get("fullname"),
             email: formData.get("email"),
             phone: formData.get("phone"),
-            insuranceProvider: formData.get("insuranceProvider"),
-            policyNumber: formData.get("policyNumber"),
-            memberId: formData.get("memberId"),
+            insurance_provider: formData.get("insuranceProvider"),
+            policy_number: formData.get("policyNumber"),
+            member_id: formData.get("memberId"),
             is_active: isActive,
         };
 
