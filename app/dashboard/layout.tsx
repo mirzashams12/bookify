@@ -70,6 +70,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             const intent = await intentRes.json();
             if (intent.error) throw new Error(intent.error);
 
+            console.log(intent);
+
             const executeRes = await fetch("/api/ai/execute", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
