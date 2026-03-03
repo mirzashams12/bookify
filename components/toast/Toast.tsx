@@ -36,7 +36,7 @@ export default function Toast({ id, message, type, onClose }: ToastProps) {
 
     return (
         <div className={`
-            flex items-center gap-4 p-4 min-w-[320px] max-w-md border rounded-[24px] shadow-[0_15px_40px_rgba(0,0,0,0.08)]
+            flex items-center gap-4 p-4 min-w-[auto] max-w-md border rounded-[24px] shadow-[0_15px_40px_rgba(0,0,0,0.08)]
             animate-in slide-in-from-right-full fade-in duration-500
             ${colors[type]}
         `}>

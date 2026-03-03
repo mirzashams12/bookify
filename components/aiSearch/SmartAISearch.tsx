@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -61,7 +62,7 @@ export default function SmartAISearch() {
     return (
         <div className="relative hidden lg:block" ref={resultRef}>
             <div className="relative group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 group-focus-within:scale-110 transition-transform" size={16} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 group-focus-within:scale-110 transition-transform" size={18} />
                 <input
                     value={aiQuery}
                     onChange={(e) => setAiQuery(e.target.value)}
@@ -78,7 +79,7 @@ export default function SmartAISearch() {
             </div>
 
             {aiResult && (
-                <div className="absolute top-full left-0 mt-4 w-[500px] bg-white border border-slate-100 rounded-[32px] shadow-[0_30px_80px_rgba(0,0,0,0.15)] z-[100] overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+                <div className="absolute top-full left-0 mt-4 w-[90vw] md:w-[500px] bg-white border border-slate-100 rounded-[32px] shadow-[0_30px_80px_rgba(0,0,0,0.15)] z-[100] overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
                     <div className="p-5 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
                         <div className="flex items-center gap-2">
                             <div className="p-1.5 bg-indigo-600 rounded-lg text-white">

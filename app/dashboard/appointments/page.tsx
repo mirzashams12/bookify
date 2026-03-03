@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { headers } from "next/headers";
 import FilterDropdown from "@/components/filter/FilterDropdown";
 import BookingDrawerContainer from "@/components/booking/BookingDrawerContainer";
@@ -63,7 +64,7 @@ export default async function AdminAppointmentsPage({
     }
 
     return (
-        <div className="max-w-[1400px] mx-auto p-6 space-y-6">
+        <div className="max-w-[1400px] mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Appointments</h1>

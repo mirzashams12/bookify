@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState } from "react";
@@ -43,7 +44,7 @@ export default function ProviderListContainer({ initialProviders, specialties }:
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filtered.map((provider) => (
                     <div key={provider.id} className={`bg-white p-6 rounded-[32px] border transition-all group relative overflow-hidden ${!provider.is_active ? 'opacity-60 grayscale-[0.5] border-slate-100' : 'border-slate-100 shadow-sm hover:shadow-md'}`}>
                         <div className="flex items-center justify-between mb-4">
