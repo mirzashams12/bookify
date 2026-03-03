@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { Clock as ClockIcon, Lock } from "lucide-react"; // Added for the disabled icon
 
 interface TimePickerProps {
     name: string;
@@ -11,6 +12,7 @@ interface TimePickerProps {
     interval?: number;
     selectedDate?: string;
     bookedTimes?: string[];
+    disabled?: boolean; // Added disabled prop
 }
 
 export default function TimePicker({
@@ -22,16 +24,21 @@ export default function TimePicker({
     interval = 5,
     selectedDate,
     bookedTimes = [],
+    disabled = false, // Default to false
 }: TimePickerProps) {
     const [selected, setSelected] = useState<string | undefined>(value);
     const [open, setOpen] = useState(false);
     const [highlightIndex, setHighlightIndex] = useState<number>(-1);
     const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
-    const [searchBuffer, setSearchBuffer] = useState("");
 
     const wrapperRef = useRef<HTMLDivElement>(null);
-    const dropdownRef = useRef<HTMLDivElement>(null); // Added for click-outside
+    const dropdownRef = useRef<HTMLDivElement>(null);
     const selectedRef = useRef<HTMLButtonElement | null>(null);
+
+    // Update internal state if value prop changes
+    useEffect(() => {
+        setSelected(value);
+    }, [value]);
 
     // --- LOGIC HELPERS ---
     const parseMinutes = (time: string) => {
@@ -81,6 +88,7 @@ export default function TimePicker({
     const times = generateTimes();
 
     const handleSelect = (time: string) => {
+        if (disabled) return;
         setSelected(time);
         onChange?.(time);
         setOpen(false);
@@ -104,7 +112,6 @@ export default function TimePicker({
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node;
-            // Close if click is outside both the button wrapper AND the portaled dropdown
             if (
                 wrapperRef.current && !wrapperRef.current.contains(target) &&
                 dropdownRef.current && !dropdownRef.current.contains(target)
@@ -113,7 +120,7 @@ export default function TimePicker({
             }
         };
 
-        if (open) {
+        if (open && !disabled) {
             calculatePosition();
             document.addEventListener("mousedown", handleClickOutside);
             window.addEventListener("scroll", calculatePosition);
@@ -125,9 +132,8 @@ export default function TimePicker({
             window.removeEventListener("scroll", calculatePosition);
             window.removeEventListener("resize", calculatePosition);
         };
-    }, [open]);
+    }, [open, disabled]);
 
-    // Scroll selected into view
     useEffect(() => {
         if (open && selectedRef.current) {
             selectedRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -135,7 +141,7 @@ export default function TimePicker({
     }, [open]);
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (!open) return;
+        if (!open || disabled) return;
         if (e.key === "ArrowDown") {
             e.preventDefault();
             setHighlightIndex((prev) => prev < times.length - 1 ? prev + 1 : prev);
@@ -156,25 +162,32 @@ export default function TimePicker({
             <div ref={wrapperRef} className="relative">
                 <button
                     type="button"
-                    onClick={() => setOpen((prev) => !prev)}
+                    disabled={disabled}
+                    onClick={() => !disabled && setOpen((prev) => !prev)}
                     onKeyDown={handleKeyDown}
                     className={`w-full px-5 py-4 rounded-[20px] border transition-all text-left outline-none font-bold flex items-center justify-between
-                        ${open
-                            ? "border-indigo-500 bg-white ring-4 ring-indigo-50 dark:bg-slate-800"
-                            : "border-slate-100 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 hover:border-indigo-300"}
+                        ${disabled
+                            ? "bg-slate-50 border-slate-100 text-slate-400 cursor-not-allowed opacity-70"
+                            : open
+                                ? "border-indigo-500 bg-white ring-4 ring-indigo-50"
+                                : "border-slate-100 bg-slate-50 hover:border-indigo-300"}
                     `}
                 >
-                    <span className={selected ? "text-slate-900 dark:text-white" : "text-slate-400"}>
+                    <span className={selected ? "text-slate-900" : "text-slate-400 text-sm font-bold"}>
                         {selected
                             ? times.find((t) => t.value === selected)?.label
                             : "Select Time"}
                     </span>
-                    <ClockIcon className={`w-5 h-5 transition-colors ${open ? "text-indigo-500" : "text-slate-300"}`} />
+                    {disabled ? (
+                        <Lock className="w-4 h-4 text-slate-300" />
+                    ) : (
+                        <ClockIcon className={`w-5 h-5 transition-colors ${open ? "text-indigo-500" : "text-slate-300"}`} />
+                    )}
                 </button>
                 <input type="hidden" name={name} value={selected || ""} />
             </div>
 
-            {open &&
+            {open && !disabled &&
                 createPortal(
                     <div
                         ref={dropdownRef}
@@ -185,7 +198,7 @@ export default function TimePicker({
                             width: position.width,
                             zIndex: 9999,
                         }}
-                        className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] max-h-[320px] overflow-y-auto p-3 no-scrollbar animate-in fade-in zoom-in-95 duration-200"
+                        className="bg-white border border-slate-100 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] max-h-[320px] overflow-y-auto p-3 no-scrollbar animate-in fade-in zoom-in-95 duration-200"
                     >
                         <div className="grid grid-cols-3 gap-2">
                             {times.map((t, i) => (
@@ -199,7 +212,7 @@ export default function TimePicker({
                                         px-3 py-3 rounded-xl text-[11px] font-black uppercase transition-all
                                         flex items-center justify-center
                                         ${t.disabled
-                                            ? "bg-slate-50 dark:bg-slate-800 text-slate-300 cursor-not-allowed"
+                                            ? "bg-slate-50 text-slate-300 cursor-not-allowed"
                                             : selected === t.value
                                                 ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100"
                                                 : i === highlightIndex
@@ -220,14 +233,5 @@ export default function TimePicker({
                     document.body
                 )}
         </>
-    );
-}
-
-// Icon helper for the button
-function ClockIcon({ className }: { className?: string }) {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-            <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-        </svg>
     );
 }

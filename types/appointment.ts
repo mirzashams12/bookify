@@ -3,9 +3,10 @@ interface StatusType {
     name: string;
 }
 
-interface ServiceType {
+interface SpecialityType {
     id: string;
     name: string;
+    slug: string;
 }
 
 export interface Appointment {
@@ -21,6 +22,7 @@ export interface Appointment {
         name: string;
         base_duration: number;
         base_price: number;
+        specialties: SpecialityType;
     };
     final_duration?: number;
     final_price?: number;

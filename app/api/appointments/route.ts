@@ -22,11 +22,14 @@ export async function GET(req: Request) {
         .select(`
         *,
         service_definitions (
+            id,
             name,
-            specialties (name)
+            specialties (id, name, slug)
         ),
         status:appointments_status_fkey (id, name),
-        providers (id, fullname)
+        providers (id, fullname, provider_specialties (
+            specialty_id
+        ))
     `, { count: "exact" });
 
     // Conditionally apply filters
