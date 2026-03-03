@@ -25,7 +25,7 @@ export default async function ProvidersPage() {
     ]);
 
     return (
-        <div className="max-w-[1400px] mx-auto p-6 space-y-8">
+        <div className="max-w-[1400px] mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
             <div>
                 <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Practitioners</h1>
                 <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">

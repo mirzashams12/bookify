@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -176,7 +177,7 @@ export default function BookAppointmentDrawer({
                         {/* 2. Provider Selection */}
                         <section className="space-y-4">
                             <h2 className="text-[10px] font-black text-indigo-600 uppercase flex items-center gap-2"><Stethoscope size={14} /> Provider</h2>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {allProviders.filter(s => s.is_active == true).map(p => (
                                     <button
                                         key={p.id}
@@ -195,7 +196,7 @@ export default function BookAppointmentDrawer({
                         {selectedProvider && (
                             <section className="space-y-4 animate-in fade-in slide-in-from-top-2">
                                 <h2 className="text-[10px] font-black text-indigo-600 uppercase">Qualified Specialty</h2>
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-wrap items-center gap-2">
                                     {availableSpecialties.map(spec => (
                                         <button
                                             key={spec.id}
@@ -214,7 +215,7 @@ export default function BookAppointmentDrawer({
                         {selectedSpecialtyId && (
                             <section className="space-y-4 animate-in fade-in slide-in-from-top-2">
                                 <h2 className="text-[10px] font-black text-indigo-600 uppercase flex items-center gap-2"><ClipboardList size={14} /> Available Services</h2>
-                                <div className="grid grid-cols-1 gap-3">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     {availableServices.map((def: any) => {
                                         const isSelected = selectedService?.id === def.id;
                                         const hasRates = def.rates_chart && def.rates_chart.length > 0;

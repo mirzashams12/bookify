@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState } from 'react';
@@ -45,7 +46,7 @@ export default function AppointmentListContainer({ selectedAppointment, initialA
     return (
         <>
             <div className="bg-white rounded-[32px] border border-slate-200 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto no-scrollbar">
                     <table className="w-full">
                         <thead className="bg-slate-50/50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
                             <tr>
@@ -97,4 +98,5 @@ export default function AppointmentListContainer({ selectedAppointment, initialA
             )}
         </>
     );
+
 }

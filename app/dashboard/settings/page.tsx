@@ -7,7 +7,7 @@ export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState('pricing');
 
     return (
-        <div className="p-10 max-w-7xl mx-auto space-y-10">
+        <div className="p-4 md:p-10 max-w-7xl mx-auto space-y-4 md:space-y-10">
             <div>
                 <h1 className="text-4xl font-black text-slate-900 uppercase italic tracking-tighter">Settings</h1>
                 <p className="text-slate-400 font-bold uppercase text-xs mt-2">Configure clinic operations and data</p>

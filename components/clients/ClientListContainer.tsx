@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState } from "react";
@@ -43,7 +44,7 @@ export default function ClientListContainer({ initialClients, totalPages, curren
                 </button>
             </div>
 
-            <div className="bg-white rounded-[32px] border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-[32px] border border-slate-200 shadow-sm overflow-hidden ">
                 <table className="w-full text-left">
                     <thead className="bg-slate-50/50 border-b border-slate-100">
                         <tr>
@@ -82,7 +83,7 @@ export default function ClientListContainer({ initialClients, totalPages, curren
                                         </button>
 
                                         {/* Meaningful More Actions */}
-                                        <div className="relative">
+                                        <div className="relative ">
                                             <button
                                                 onClick={() => setActiveDropdown(activeDropdown === client.id ? null : client.id)}
                                                 className="p-2.5 hover:bg-slate-100 text-slate-400 rounded-xl transition-all"

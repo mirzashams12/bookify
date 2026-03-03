@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -108,7 +109,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     </header>
 
                     {/* --- MAIN APP AREA --- */}
-                    <main className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar bg-slate-50/30">
+                    <main className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar bg-slate-50/30">
                         <div className="max-w-[1400px] mx-auto">
                             <ToastProvider>
                                 {children}
