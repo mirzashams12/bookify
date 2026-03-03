@@ -17,7 +17,10 @@ export async function PATCH(
             .update({
                 status: body.status_id, // Changed from status_id to status
                 final_price: body.final_price,
-                final_duration: body.final_duration
+                final_duration: body.final_duration,
+                service_definition_id: body.service_id,
+                date: body.date,
+                time: body.time
             })
             .eq("id", id)
             .select()

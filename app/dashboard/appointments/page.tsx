@@ -43,7 +43,7 @@ async function getSpecialties() {
 export default async function AdminAppointmentsPage({
     searchParams,
 }: {
-    searchParams: Promise<{ page?: string, startDate?: string, endDate?: string, status?: string, provider?: string }>;
+    searchParams: Promise<{ id?: string, page?: string, startDate?: string, endDate?: string, status?: string, provider?: string }>;
 }) {
     const params = await searchParams;
 
@@ -56,6 +56,11 @@ export default async function AdminAppointmentsPage({
     const appointments = appointmentsData.data || [];
     const totalPages = appointmentsData.totalPages || 0;
     const currentPage = Number(params.page || 1);
+    let selectedAppointment: any = null;
+
+    if (params?.id) {
+        selectedAppointment = appointments.find((s: any) => s.id == params?.id);
+    }
 
     return (
         <div className="max-w-[1400px] mx-auto p-6 space-y-6">
@@ -72,8 +77,10 @@ export default async function AdminAppointmentsPage({
             </div>
 
             <AppointmentListContainer
+                selectedAppointment={selectedAppointment}
                 initialAppointments={appointments}
                 statuses={statuses}
+                specialties={specialties}
                 totalPages={totalPages}
                 currentPage={currentPage}
             />

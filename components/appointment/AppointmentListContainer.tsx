@@ -17,8 +17,8 @@ const getServiceColor = (name: string = "default") => {
     return colors[Math.abs(hash) % colors.length];
 };
 
-export default function AppointmentListContainer({ initialAppointments, statuses, totalPages, currentPage }: any) {
-    const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
+export default function AppointmentListContainer({ selectedAppointment, initialAppointments, statuses, specialties, totalPages, currentPage }: any) {
+    const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(selectedAppointment);
     const router = useRouter();
 
     const handleUpdate = async (formData: any) => {
@@ -63,7 +63,7 @@ export default function AppointmentListContainer({ initialAppointments, statuses
                                     <td className="px-8 py-5 font-bold text-slate-900 uppercase text-sm">{appt.name}</td>
                                     <td className="px-8 py-5">
                                         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter border ${getServiceColor(appt.service_definitions?.name)}`}>
-                                            {appt.service_definitions?.name || 'Standard'}
+                                            {appt.service_definitions?.specialties?.name || 'Standard'}
                                         </span>
                                     </td>
                                     <td className="px-8 py-5 font-bold text-slate-600 text-sm">{appt.date}</td>
@@ -89,6 +89,7 @@ export default function AppointmentListContainer({ initialAppointments, statuses
                 <EditAppointmentDrawer
                     appointment={selectedAppt}
                     statuses={statuses}
+                    specialties={specialties} // Ensure this is passed!
                     isOpen={!!selectedAppt}
                     onClose={() => setSelectedAppt(null)}
                     onUpdate={handleUpdate}

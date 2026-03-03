@@ -2,43 +2,43 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 const IntentSchema = z.object({
-    action: z.enum([
-        "filter_bookings",
-        "get_revenue",
-        "find_all_clients",
-        "find_active_clients",
-        "find_inactive_clients",
-        "find_all_providers",
-        "find_active_providers",
-        "find_inactive_providers",
-        "find_all_services",
-        "find_active_services",
-        "find_inactive_services"
+  action: z.enum([
+    "filter_bookings",
+    "get_revenue",
+    "find_all_clients",
+    "find_active_clients",
+    "find_inactive_clients",
+    "find_all_providers",
+    "find_active_providers",
+    "find_inactive_providers",
+    "find_all_services",
+    "find_active_services",
+    "find_inactive_services"
 
-    ]),
-    date_range: z.string().optional(),
-    service: z.string().optional(),
-    name: z.string().optional(),
+  ]),
+  date_range: z.string().optional(),
+  service: z.string().optional(),
+  name: z.string().optional(),
 });
 
 export async function POST(req: Request) {
-    try {
-        const { query } = await req.json();
+  try {
+    const { query } = await req.json();
 
-        const aiResponse = await fetch(
-            `${process.env.GROQ_AI_URL}`,
+    const aiResponse = await fetch(
+      `${process.env.GROQ_AI_URL}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: `${process.env.GROQ_AI_MODEL}`,
+          messages: [
             {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    model: `${process.env.GROQ_AI_MODEL}`,
-                    messages: [
-                        {
-                            role: "system",
-                            content: `You are an AI assistant for a physiotherapy clinic booking system.
+              role: "system",
+              content: `You are an AI assistant for a physiotherapy clinic booking system.
 
                             Your task is to convert user queries into structured JSON.
                             
@@ -128,6 +128,7 @@ export async function POST(req: Request) {
                             date_range must always be a SINGLE STRING if present.
                             
                             Relative mappings:
+                            - yesterday
                             - today
                             - tomorrow
                             - this_week
@@ -216,33 +217,33 @@ export async function POST(req: Request) {
                             Return ONLY a single valid JSON object.
                             No extra text.
                             No explanations.`
-                        },
-                        {
-                            role: "user",
-                            content: query
-                        }
-                    ],
-                    temperature: 0
-                })
+            },
+            {
+              role: "user",
+              content: query
             }
-        );
+          ],
+          temperature: 0
+        })
+      }
+    );
 
-        const data = await aiResponse.json();
+    const data = await aiResponse.json();
 
-        const content = data.choices[0].message.content;
+    const content = data.choices[0].message.content;
 
-        console.log("ai content: ", content);
+    console.log("ai content: ", content);
 
-        const parsed = IntentSchema.parse(JSON.parse(content));
+    const parsed = IntentSchema.parse(JSON.parse(content));
 
-        console.log(parsed);
+    console.log(parsed);
 
-        return NextResponse.json(parsed);
-    } catch (error) {
-        console.error(error);
-        return NextResponse.json(
-            { error: "Invalid AI response" },
-            { status: 400 }
-        );
-    }
+    return NextResponse.json(parsed);
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { error: "Invalid AI response" },
+      { status: 400 }
+    );
+  }
 }
