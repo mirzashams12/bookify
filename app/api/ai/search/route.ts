@@ -153,6 +153,9 @@ export async function POST(req: Request) {
                             
                             - specific month + year (e.g., Jan 2024)
                               → return "01 Jan 2024 to 31 Jan 2024"
+
+                            - specific day (e.g., 01 Jan 2024)
+                              → return "01 Jan 2024"
                             
                             Never:
                             - return a separate "year" field

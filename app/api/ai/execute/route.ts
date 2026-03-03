@@ -67,7 +67,7 @@ function getDateRange(
             return [nextYear.startOf("year"), nextYear.endOf("year")];
 
         default:
-            return null;
+            return [dayjs(range), dayjs(range)];
     }
 }
 
@@ -109,12 +109,23 @@ export async function POST(req: Request) {
     }
 
     if (intent.action === "get_revenue") {
-        let query = supabase.from("appointments").select("final_price");
+        let query = supabase
+            .from("appointments")
+            .select(`
+            final_price,
+            service_definitions!inner (
+                specialties!inner (slug)
+            )
+            `);
 
         if (dateRange) {
             query = query
                 .gte("date", dateRange[0].format("YYYY-MM-DD"))
                 .lte("date", dateRange[1].format("YYYY-MM-DD"));
+        }
+
+        if (intent.service) {
+            query = query.ilike("service_definitions.specialties.slug", `%${intent.service}%`);
         }
 
         const { data, error } = await query;
@@ -201,6 +212,7 @@ export async function POST(req: Request) {
             .select(`
                 id,
                 name,
+                slug,
                 service_definitions (
                     id,
                     name,
@@ -215,7 +227,7 @@ export async function POST(req: Request) {
             `).eq("is_active", true)
 
         if (intent.service) {
-            query = query.ilike("name", `%${intent.service}%`);
+            query = query.ilike("slug", `%${intent.service}%`);
         }
 
         const { data, error } = await query;
@@ -233,6 +245,7 @@ export async function POST(req: Request) {
             .select(`
                 id,
                 name,
+                slug,
                 service_definitions (
                     id,
                     name,
@@ -247,7 +260,7 @@ export async function POST(req: Request) {
             `).eq("is_active", false)
 
         if (intent.service) {
-            query = query.ilike("name", `%${intent.service}%`);
+            query = query.ilike("slug", `%${intent.service}%`);
         }
 
         const { data, error } = await query;
